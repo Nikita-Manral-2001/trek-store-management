@@ -59,8 +59,6 @@ I developed a complete **Store Backend API** using ASP.NET Core Web API to manag
 
 Most APIs are secured using **JWT Authentication**.
 
-Header:
-Authorization: Bearer <your_token>
 
 ---
 
