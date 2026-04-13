@@ -1,0 +1,118 @@
+﻿@model IEnumerable<TTH.Areas.Super.Models.TrekkersStore.StoreSizeModel>
+
+@{
+    ViewData["Title"] = "Size List";
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div id="visibility-message"></div>
+        <div class="card border-bottom border-dark rounded-3">
+            <div class="card-header bg-white border-bottom border-dark">
+                <h3 class="m-0 fw-semibold text-dark">Add Size</h3>
+            </div>
+            <div class="card-body">
+              
+                    <form asp-action="AddSize" asp-controller="StoreAdmin" method="post" class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label for="sizeName" class="col-form-label fw-bold">Size Name</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="text" class="form-control" id="sizeName" name="Name" placeholder="Size Name" required>
+                        </div>
+                        <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-danger">Add Size</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+        <div class="card-header bg-white border-bottom border-dark">
+            <h3 class="m-0 fw-semibold text-dark">Size List</h3>
+        </div>
+            <table class="table table-bordered table-striped table-hover text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Size ID</th>
+                        <th>Size</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var size in Model)
+                    {
+                        <tr>
+                            <td>@size.IdSize</td>
+                            <td>@size.Name</td>
+                            <td>
+
+
+
+                                    <form class="d-inline toggle-visibility-form" data-category-id="@size.IdSize">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(size.IsVisible ? "btn-success" : "btn-danger") toggle-visibility-btn" data-visible="@size.IsVisible">
+                                            @(size.IsVisible ? "Disable" : "Enable")
+                                        </button>
+                                    </form>
+
+
+
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        // Handle visibility toggle button click
+        $('.toggle-visibility-form').submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var button = form.find('.toggle-visibility-btn');
+            var categoryId = form.data('category-id');
+            var isCurrentlyVisible = button.data('visible');  // Get current visibility
+
+            $.ajax({
+                url: '/Super/StoreAdmin/UpdateVisibilitySize',
+                type: 'POST',
+                data: { id: categoryId },
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Show success message
+                        $('#visibility-message').html('<div class="alert alert-success">' + response.message + '</div>');
+
+                        // Update button text and visibility status
+                        if (response.isVisible) {
+                            button.text('Disable').removeClass('btn-danger').addClass('btn-success');
+                            button.data('visible', true); // Update button data to reflect the new visibility
+                        } else {
+                            button.text('Enable').removeClass('btn-success').addClass('btn-danger');
+                            button.data('visible', false); // Update button data to reflect the new visibility
+                        }
+                    } else {
+                        // Show error message
+                        $('#visibility-message').html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    // Handle error case
+                    $('#visibility-message').html('<div class="alert alert-danger">Error updating category visibility.</div>');
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,331 @@
+﻿@model List<TTH.Areas.Super.Models.TrekkersStore.OrderDetailsViewModel>
+
+@{
+    ViewData["Title"] = "Search Trekker";
+}
+
+<div class="container mt-5">
+
+    <div class="selectDepartureAdmin mt-1 row">
+       
+
+
+        <form id="orderSearchForm">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="dateFrom" class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="dateFrom" name="dateFrom">
+                </div>
+                <div class="col-md-4">
+                    <label for="dateTo" class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="dateTo" name="dateTo">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="button" id="searchOrders" class="btn btn-primary">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="row">
+        <div class="col-md-5">
+
+            <label for="trekkerName">Search user by Name,Phone,Email</label>
+            <input type="text" class="form-control" id="trekkerName" name="trekkerName" placeholder="Enter Name/Phone/Email">
+
+
+            <div id="resultMessage" class="mt-3"></div>
+        </div>
+        <div class="col-md-1">
+            <label for="trekkerName">..</label><br>
+            <button type="button" id="searchButton" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+
+    <div id="searchResults" class="mt-2"></div>
+  
+
+</div>
+
+<div class="container" id="RecentOrderDiv">
+    <h3>Recent Order</h3>
+    <table class="table table-bordered">
+        <thead class="thead-light">
+            <tr>
+
+                <th>User Details</th>
+<th>Status</th>
+                <th>Order Date</th>
+                <th>Payment</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var group in Model.GroupBy(x => new { x.UserId,x.BookingId }))
+            {
+                var totalAmount = group.Sum(x => x.Amount);
+                <tr>
+
+                    <td >
+                        <a asp-controller="StoreAdmin"
+                           asp-action="UserProductDetails"
+                           asp-route-bookingId="@group.First().BookingId">
+                            @group.First().Id  @group.First().FirstName @group.First().LastName
+                        </a>
+
+@* 
+                        <a asp-controller="StoreAdmin"
+                           asp-action="UserProductDetails"
+                           asp-route-bookingId="@group.First().BookingId">
+                            
+                        </a> *@
+
+                        <i class="fas fa-eye"
+                           data-bs-toggle="modal"
+                           data-bs-target="#viewModal"
+                           data-bookingid="@group.First().BookingId"
+                           style="cursor:pointer;">
+                        </i>
+                        <!-- Modal -->
+                        <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="viewModalLabel">View Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" id="modalContent">
+                                        <p>Details about the product/record will appear here.</p>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                    </td>
+                    <td class="text-success">@group.First().Status</td>
+
+                    <td>
+                        
+                        
+                        @if (group.First().PaymentStatus == "Paid")
+                        {
+                            <strong>OrderDate:</strong> @group.First().OrderDate.ToString("dd MMM yyyy")
+  
+                        }
+                    </td>
+                    <td>
+                        <strong>Paid Amount:</strong>@totalAmount<br>
+                        
+
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function () {
+        $('#searchButton').click(function () {
+            var trekkerName = $('#trekkerName').val();
+
+            $.ajax({
+                type: "POST",
+                url: '/super/StoreAdmin/SearchTrekker',
+                data: { trekkerName: trekkerName },
+                success: function (response) {
+                    $('#RecentOrderDiv').empty();
+                    $('#searchResults').html(response);
+                },
+                error: function () {
+                    $('#resultMessage').text('Error occurred while searching for trekker.');
+                }
+            });
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#searchOrders').on("click", function () {
+            var dateFrom = $("#dateFrom").val();
+            var dateTo = $("#dateTo").val();
+            
+
+            $.ajax({
+                type: "GET",
+                url: '/super/StoreAdmin/SearchOrders', 
+                data: {
+                    dateFrom: dateFrom,
+                    dateTo: dateTo,
+                    
+                },
+                success: function (result) {
+                    $('#searchResults').html(result).show();      // show search results
+                    $('#RecentOrderDiv').hide();
+                },
+                error: function (xhr) {
+                    alert('Error occurred while fetching orders: ' + xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+
+
+
+
+
+<script>
+    $(document).ready(function () {
+        // Function to get query parameter value by name
+        function getQueryParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Function to show the loader
+        function showLoader() {
+            $('#loader').show();
+        }
+
+        // Function to hide the loader
+        function hideLoader() {
+            $('#loader').hide();
+        }
+
+        // Function to populate the second dropdown
+        function populateSecondDropdown(TrekId) {
+            if (TrekId) {
+                showLoader(); // Show loader while data is being fetched
+                $.ajax({
+                    url: '/super/ManageBooking/GetDepartureDates', // Replace with your actual URL
+                    type: 'GET',
+                    data: { TrekId: TrekId },
+                    success: function (data) {
+                        hideLoader(); // Hide loader after data is fetched
+                        console.log(data);
+                        // Clear existing options
+                        $('#DepartureDateId').empty();
+                        $('#DepartureDateId').append($('<option>', { text: 'Choose Departure Date' }));
+
+                        // Populate the second dropdown with new options
+                        data.forEach(function (item) {
+                            $('#DepartureDateId').append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        hideLoader(); // Hide loader in case of error
+                        console.error('Error fetching departure dates:', status, error);
+                    }
+                });
+            }
+        }
+
+        // Function to populate the transfer date dropdown
+        function populateTransferDateDropdown(TrekId) {
+            if (TrekId) {
+                showLoader(); // Show loader while data is being fetched
+                $.ajax({
+                    url: '/super/ManageBooking/GetDepartureDates', // Replace with your actual URL
+                    type: 'GET',
+                    data: { TrekId: TrekId },
+                    success: function (data) {
+                        hideLoader(); // Hide loader after data is fetched
+                        console.log(data);
+                        // Clear existing options
+                        $('#ToDate').empty();
+                        $('#ToDate').append($('<option>', { text: 'Choose Transfer Date' }));
+
+                        // Populate the second dropdown with new options
+                        data.forEach(function (item) {
+                            $('#ToDate').append($('<option>', {
+                                value: item.value,
+                                text: item.text
+                            }));
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        hideLoader(); // Hide loader in case of error
+                        console.error('Error fetching transfer dates:', status, error);
+                    }
+                });
+            }
+        }
+
+        // Trigger the function when the TrekId dropdown changes
+        $('#TrekId').on('change', function () {
+            var TrekId = $(this).val();
+            populateSecondDropdown(TrekId);
+        });
+
+        // Trigger the function when the ToTrek dropdown changes
+        $('#ToTrek').on('change', function () {
+            var TrekId = $(this).val();
+            populateTransferDateDropdown(TrekId);
+        });
+
+        // Get the TrekId from the query string
+        const trekId = getQueryParameter('TrekId');
+
+        // Populate the second dropdown on page load if TrekId exists
+        if (trekId) {
+            populateSecondDropdown(trekId);
+        }
+
+        // Enable/Disable the search button based on selection
+        $('#DepartureDateId').on('change', function () {
+            var TrekId = $('#TrekId').val();
+            var DepartureId = $('#DepartureDateId').val();
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("SearchParticipants", "RentCart")', // Change to your action
+                data: { TrekId: TrekId, DepartureId: DepartureId },
+                success: function (response) {
+                    $('#RecentOrderDiv').empty();
+                    $('#searchResults').html(response);
+                },
+                error: function () {
+                    console.error('Error occurred while searching for participants.');
+                }
+            });
+
+        });
+
+        // $('#searchButton').click(function () {
+
+        // });
+    });
+</script>
+
+@* Get UserData in Modal *@
+
+
+<script>
+    var viewModal = document.getElementById('viewModal');
+    viewModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget; // The eye icon
+        var bookingId = button.getAttribute('data-bookingid');
+        var modalBody = document.getElementById('modalContent');
+
+        modalBody.innerHTML = "<p>Loading...</p>";
+
+       
+        $.ajax({
+            url: "/Super/StoreAdmin/GetUserDetails/" + bookingId,
+            type: 'GET',
+            data: { bookingId: bookingId },
+            success: function (data) {
+                modalBody.innerHTML = data;
+            },
+            error: function () {
+                modalBody.innerHTML = "<p class='text-danger'>Error loading data.</p>";
+            }
+        });
+    });
+</script>
+

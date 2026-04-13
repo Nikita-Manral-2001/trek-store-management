@@ -1,0 +1,79 @@
+﻿@using TTH.Areas.Super.Models.TrekkersStore;
+@model StoreProductsModel
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card border-bottom border-dark rounded-3">
+            <div class="card-header bg-white border-bottom border-dark">
+                <h3 class="m-0 fw-semibold text-dark">Add Products</h3>
+            </div>
+         
+
+        @if (ViewBag.SuccessMessage != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                <strong>Success!</strong> @ViewBag.SuccessMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" asp-action="StoreAddProducts" asp-controller="StoreAdmin">
+                <div class="row g-4">
+                    <!-- Category -->
+                    <div class="col-md-4">
+                        <label for="CategoryId" class="form-label fw-semibold">Category</label>
+                        @if (ViewBag.Categories != null)
+                        {
+                            <select id="CategoryId" name="Category_Id" class="form-select shadow-sm">
+                                <option value="">-- Select Category --</option>
+                                @foreach (var category in (List<TTH.Areas.Super.Models.TrekkersStore.StoreCategoryViewModel>)ViewBag.Categories)
+                                {
+                                    <option value="@category.Category_Id">@category.CategoryName</option>
+                                }
+                            </select>
+                        }
+                        else
+                        {
+                            <p class="text-danger">No categories available.</p>
+                        }
+                    </div>
+
+                    <!-- Product Name -->
+                    <div class="col-md-4">
+                        <label asp-for="ProductName" class="form-label fw-semibold">Product Name</label>
+                        <input type="text" class="form-control shadow-sm" asp-for="ProductName" name="productName" placeholder="Enter product name">
+                    </div>
+
+                        <!-- Product Name -->
+                        <div class="col-md-4">
+                            <label asp-for="Price" class="form-label fw-semibold">Price</label>
+                            <input type="text" class="form-control shadow-sm" asp-for="Price" name="price" placeholder="Price">
+                        </div>
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                        <textarea class="form-control summerTextarea shadow-sm" asp-for="Description" name="description" rows="4" placeholder="Enter product description"></textarea>
+                    </div>
+
+                    <!-- Cover Photo -->
+                    <div class="row">
+                            <div class="col-md-6">
+                                <label asp-for="CoverPhoto" class="form-label fw-semibold">Cover Image</label>
+                                <input type="file" class="form-control shadow-sm" asp-for="CoverPhoto">
+                            </div>
+                            <div class=" col-md-4 mt-4 text-end">
+                                <button type="submit" class="btn btn-outline-danger px-4 py-2 shadow-sm">Submit</button>
+                            </div>
+                    </div>
+                   
+                </div>
+
+                <!-- Submit Button -->
+               
+            </form>
+        </div>
+    </div>
+</div>
+</div>

@@ -1,0 +1,236 @@
+﻿@model IEnumerable<TTH.Areas.Super.Models.TrekkersStore.StoreProductsModel>
+
+<div class="container">
+    <h2>Edit Inventory</h2>
+    <form asp-action="AddInventory" method="post" onsubmit="return saveInventoryItems()">
+        <div class="form-group">
+            <label for="storeId">Product Name</label>
+            <select class="form-control" id="storeId" name="storeId" onchange="loadInventoryItems()">
+                <option value="">Select a Product</option>
+                @foreach (var store in Model)
+                {
+                    <option value="@store.Products_Id">@store.ProductName</option>
+                }
+            </select>
+        </div>
+        <div class="inventory-table" style="display:none;">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Invent ID</th>
+                        <th>Product Name</th>
+                        <th>Size Name</th>
+
+                    <th>Color Name</th>
+                        <th>Quantity</th>
+                        <th>Price Per Day</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-details">
+                    <!-- Inventory details will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="alert alert-danger" id="no-inventory-message" style="display:none;">
+            No inventory found for the selected store.
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>
+
+<script>
+    function loadInventoryItems() {
+        var storeId = document.getElementById("storeId").value;
+        if (storeId) {
+            fetch(`/Super/StoreAdmin/GetInventoryItems?storeId=${storeId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    var tableBody = document.getElementById("inventory-details");
+                    tableBody.innerHTML = "";
+
+                    if (data && data.length > 0) {
+                        data.forEach(item => {
+
+
+                            var galleryHtml = '';
+                            if (item.productGalleries && item.productGalleries.length > 0) {
+                                galleryHtml = item.productGalleries.map((img, index) => {
+                                    const imgUrl = `${img.imagePath}`;
+                                    return `
+                <div class="image-wrapper" data-image-id="${img.id}" style="display: inline-block; position: relative; margin: 3px;">
+                    <img src="${imgUrl}" alt="Image" style="height: 50px;">
+                    <span class="remove-image-btn" style="
+                        position: absolute;
+                        top: -8px;
+                        right: -8px;
+                        background: red;
+                        color: white;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        width: 18px;
+                        height: 18px;
+                        text-align: center;
+                        font-size: 12px;
+                        line-height: 18px;">×</span>
+                </div>
+            `;
+                                }).join('');
+                            } else {
+                                galleryHtml = '<span>No images</span>';
+                            }
+
+
+
+                            var row = `<tr>
+
+                         
+
+                                        <td>${item.id}</td>
+                                        <td>${item.productName || ''}</td>
+                                        <td>${item.sizeName || ''}</td>
+                                            <td>${item.colorName || ''}</td>
+                                        <td><input type="number" class="form-control" name="quantity" value="${item.quantity}" data-invent-id="${item.id}"></td>
+                                        <td><input type="number" class="form-control" name="price" value="${item.price}" data-invent-id="${item.id}"></td>
+                                        <td><input type="file" class="form-control" name="images_${item.id}" multiple accept="image/*" data-invent-id="${item.id}">
+                                             <div class="gallery-images">${galleryHtml}</div>
+                                        
+                                        </td>
+                                            <td>
+            <button type="button"
+                    class="btn btn-sm toggle-visibility-btn ${item.isVisible ? 'btn-success' : 'btn-danger'}"
+                    data-invent-id="${item.id}"
+                    data-visible="${item.isVisible}">
+                ${item.isVisible ? 'Disable' : 'Enable'}
+            </button>
+        </td>
+                                    </tr>`;
+                            tableBody.innerHTML += row;
+                        });
+
+                        document.querySelector(".inventory-table").style.display = "block";
+                        document.getElementById("no-inventory-message").style.display = "none";
+                    } else {
+                        document.querySelector(".inventory-table").style.display = "none";
+                        document.getElementById("no-inventory-message").style.display = "block";
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching inventory items:', error);
+                    document.querySelector(".inventory-table").style.display = "none";
+                    document.getElementById("no-inventory-message").style.display = "block";
+                });
+        } else {
+            document.querySelector(".inventory-table").style.display = "none";
+            document.getElementById("no-inventory-message").style.display = "none";
+        }
+    }
+
+    function saveInventoryItems() {
+        var rows = document.querySelectorAll("#inventory-details tr");
+        var formData = new FormData();
+
+        rows.forEach((row, index) => {
+            var inventId = row.querySelector("td:first-child")?.innerText?.trim();
+            var quantity = row.querySelector("input[name='quantity']")?.value;
+            var price = row.querySelector("input[name='price']")?.value;
+
+            // Append simple fields
+            formData.append(`InventoryItems[${index}].Id`, inventId);
+            formData.append(`InventoryItems[${index}].Quantity`, quantity);
+            formData.append(`InventoryItems[${index}].Price`, price);
+
+            // Handle file uploads
+            var imageInput = row.querySelector(`input[type="file"][data-invent-id="${inventId}"]`);
+            if (imageInput && imageInput.files.length > 0) {
+                for (let i = 0; i < imageInput.files.length; i++) {
+                    formData.append(`InventoryItems[${index}].ProductGalleries`, imageInput.files[i]);
+                }
+            }
+        });
+
+        fetch(`/Super/StoreAdmin/UpdateInventoryItems`, {
+            method: 'POST',
+            body: formData // Send as FormData instead of JSON
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Inventory updated successfully');
+                   
+                } else {
+                    alert('Failed to update inventory: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error updating inventory items:', error);
+                alert('An error occurred while updating inventory');
+            });
+
+        return false; // Prevent normal form submit
+    }
+
+    $(document).on('click', '.remove-image-btn', function () {
+        const imageWrapper = $(this).closest('.image-wrapper');
+        const imageId = imageWrapper.data('image-id');
+
+        if (confirm('Are you sure you want to delete this image?')) {
+            $.ajax({
+                url: '/Super/StoreAdmin/DeleteGalleryImage', // Change to your actual controller/method
+                type: 'POST',
+                data: { id: imageId },
+                success: function (response) {
+                    if (response.success) {
+                        imageWrapper.remove(); // Remove image from DOM
+                    } else {
+                        alert('Failed to delete image.');
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while deleting the image.');
+                }
+            });
+        }
+    });
+
+
+    
+</script>
+
+<script>
+    $(document).on('click', '.toggle-visibility-btn', function () {
+        var $btn = $(this);
+        var inventId = $btn.data('invent-id');
+        var isVisible = $btn.data('visible');
+
+        $.ajax({
+            url: '/Super/StoreAdmin/UpdateVisibilityVariants',
+            type: 'POST',
+            data: {
+                id: inventId,
+                isVisible: !isVisible
+            },
+            success: function (response) {
+                if (response.success) {
+                    // Toggle button text, class, and data attribute
+                    $btn.text(response.newVisibility ? 'Disable' : 'Enable');
+                    $btn
+                        .toggleClass('btn-success', response.newVisibility)
+                        .toggleClass('btn-danger', !response.newVisibility);
+                    $btn.data('visible', response.newVisibility);
+                } else {
+                    alert('Failed to update visibility.');
+                }
+            },
+            error: function () {
+                alert('Error occurred while updating visibility.');
+            }
+        });
+    });
+</script>
+
+

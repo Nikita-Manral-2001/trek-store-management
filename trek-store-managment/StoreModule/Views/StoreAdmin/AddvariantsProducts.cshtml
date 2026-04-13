@@ -1,0 +1,70 @@
+﻿@using TTH.Areas.Super.Models.TrekkersStore
+@model ProductVariantInputModel
+
+<div class="container mt-4">
+    <h3>Add Product Variants</h3>
+    <form method="post" asp-action="AddvariantsProducts" asp-controller="StoreAdmin" asp-area="Super">
+        <input type="hidden" name="ProductId" value="@Model.ProductId" />
+
+        <div id="variant-container">
+            <div class="row variant-group mb-3">
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label><b>Select Size</b></label>
+                        <select class="form-control" name="SizeIds[]">
+                            <option value="">-- Select Size --</option>
+                            @foreach (var size in ViewBag.Sizes as List<SelectListItem>)
+                            {
+                                <option value="@size.Value">@size.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label><b>Select Color</b></label>
+                        <select class="form-control" name="ColorIds[]">
+                            <option value="">-- Select Color --</option>
+                            @foreach (var color in ViewBag.Colors as List<SelectListItem>)
+                            {
+                                <option value="@color.Value">@color.Text</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger remove-variant">Remove</button>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary mt-3" id="add-more">Add More</button>
+        <button type="submit" class="btn btn-primary mt-3 ml-2">Submit</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#add-more").click(function () {
+                var newVariant = $(".variant-group:first").clone();
+
+                // Clear the selected values
+                newVariant.find("select").each(function () {
+                    $(this).val("");
+                });
+
+                // Append the cloned element
+                $("#variant-container").append(newVariant);
+            });
+
+            $(document).on("click", ".remove-variant", function () {
+                if ($(".variant-group").length > 1) {
+                    $(this).closest(".variant-group").remove();
+                }
+            });
+        });
+    </script>
+}

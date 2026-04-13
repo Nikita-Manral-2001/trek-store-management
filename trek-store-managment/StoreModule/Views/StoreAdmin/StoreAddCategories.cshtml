@@ -1,0 +1,121 @@
+﻿@model IEnumerable<TTH.Areas.Super.Models.TrekkersStore.CategoryModel>
+
+<div class="container py-4">
+    <!-- Display Success/Error Message -->
+    <div id="visibility-message"></div>
+
+    <!-- Add Category Form -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card border-bottom border-dark rounded-3">
+            <div class="card-header bg-white border-bottom border-dark">
+                <h3 class="m-0 fw-semibold text-dark">Add Category</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="AddCategory" method="post" enctype="multipart/form-data">
+                    <div class="form-group mb-3">
+                        <label for="CategoryName" class="form-label fw-bold">Category Name</label>
+                        <input type="text" class="form-control" id="CategoryName" name="CategoryName" required>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="CoverPhoto" class="form-label fw-bold">Category Image</label>
+                        <input type="file" class="form-control" id="CoverPhoto" name="CoverPhoto" accept="image/*" required>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn btn-outline-danger px-4">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category List -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="card-header bg-white border-bottom border-dark">
+                <h3 class="m-0 fw-semibold text-dark">Category List</h3>
+            </div>
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Category ID</th>
+                        <th>Category Name</th>
+                        <th>Category Image</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="category-list-body">
+                    @foreach (var category in Model)
+                    {
+                        <tr class="text-center">
+                            <td>@category.Category_Id</td>
+                            <td>@category.CategoryName</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(category.CoverImgUrl))
+                                {
+                                    <img src="@category.CoverImgUrl" alt="Category Image" class="img-thumbnail shadow-sm" style="height: 80px;" />
+                                }
+                            </td>
+                            <td>
+                                <a href="@Url.Action("EditCategory", new { id = category.Category_Id })" class="btn btn-outline-danger btn-sm">Edit</a>
+
+                                <form class="d-inline toggle-visibility-form" data-category-id="@category.Category_Id">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm @(category.IsVisible ? "btn-success" : "btn-danger") toggle-visibility-btn" data-visible="@category.IsVisible">
+                                        @(category.IsVisible ? "Disable" : "Enable")
+                                    </button>
+                                </form>
+
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Handle visibility toggle button click
+        $('.toggle-visibility-form').submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var button = form.find('.toggle-visibility-btn');
+            var categoryId = form.data('category-id');
+            var isCurrentlyVisible = button.data('visible');  // Get current visibility
+
+            $.ajax({
+                url: '/Super/StoreAdmin/UpdateVisibilityCategory',
+                type: 'POST',
+                data: { id: categoryId },
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Show success message
+                        $('#visibility-message').html('<div class="alert alert-success">' + response.message + '</div>');
+
+                        // Update button text and visibility status
+                        if (response.isVisible) {
+                            button.text('Disable').removeClass('btn-danger').addClass('btn-success');
+                            button.data('visible', true); // Update button data to reflect the new visibility
+                        } else {
+                            button.text('Enable').removeClass('btn-success').addClass('btn-danger');
+                            button.data('visible', false); // Update button data to reflect the new visibility
+                        }
+                    } else {
+                        // Show error message
+                        $('#visibility-message').html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    // Handle error case
+                    $('#visibility-message').html('<div class="alert alert-danger">Error updating category visibility.</div>');
+                }
+            });
+        });
+    });
+</script>

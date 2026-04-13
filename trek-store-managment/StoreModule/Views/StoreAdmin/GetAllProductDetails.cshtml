@@ -1,0 +1,136 @@
+﻿@using TTH.Areas.Super.Models.TrekkersStore;
+@model IEnumerable<StoreProductsModel>
+
+<style>
+    .table td, .table th {
+        padding: 0.3rem;
+        font-size: 0.85rem;
+        vertical-align: middle;
+    }
+
+    .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-header h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .cover-image img {
+        max-height: 60px;
+        object-fit: cover;
+    }
+</style>
+
+<div class="container py-3">
+   
+        
+    <div id="visibility-message">
+        
+    </div>
+    <div id="visibility-message"> <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button></div>
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card border-bottom border-dark rounded-3">
+            <div class="card-header bg-white border-bottom border-dark py-2 px-3">
+                <h3 class="fw-semibold text-dark small">All Products</h3>
+            </div>
+
+            <div class="card-body">
+                <table class="table table-striped align-middle table-hover table-sm">
+                    <thead class="table-light small">
+                        <tr>
+                            <th>Actions</th>
+                            <th>Product Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Cover Image</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="@Url.Action("EditProductDetails", "StoreAdmin", new { id = product.Products_Id })" class="btn btn-warning btn-sm text-white">Edit</a>
+
+                                        <form class="d-inline toggle-visibility-form" data-category-id="@product.Products_Id">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm @(product.IsVisible ? "btn-success" : "btn-danger") toggle-visibility-btn" data-visible="@product.IsVisible">
+                                                @(product.IsVisible ? "Disable" : "Enable")
+                                            </button>
+                                        </form>
+
+                                       
+                                    </div>
+                                    <div class=" ms-3 mt-2">
+                                        <form action="@Url.Action("AddVariants", "StoreAdmin", new { area = "Super", id = product.Products_Id })" method="get" class="d-inline ">
+                                            <button type="submit" class="btn btn-primary btn-sm">Variants</button>
+                                        </form>
+                                    </div>
+                                  
+                                   
+                                </td>
+                                <td class="small">@product.ProductName</td>
+                                <td class="small">@Html.Raw(product.Description)</td>
+                                <td class="small">@product.Price</td>
+                                <td class="cover-image">
+                                    <img src="@product.CoverImgUrl" class="img-fluid rounded shadow-sm" alt="Cover Image">
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        // Handle visibility toggle button click
+        $('.toggle-visibility-form').submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var button = form.find('.toggle-visibility-btn');
+            var categoryId = form.data('category-id');
+            var isCurrentlyVisible = button.data('visible');  // Get current visibility
+
+            $.ajax({
+                url: '/Super/StoreAdmin/UpdateVisibilityProduct',
+                type: 'POST',
+                data: { id: categoryId },
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Show success message
+                        $('#visibility-message').html('<div class="alert alert-success">' + response.message + '</div>');
+
+                        // Update button text and visibility status
+                        if (response.isVisible) {
+                            button.text('Disable').removeClass('btn-danger').addClass('btn-success');
+                            button.data('visible', true); // Update button data to reflect the new visibility
+                        } else {
+                            button.text('Enable').removeClass('btn-success').addClass('btn-danger');
+                            button.data('visible', false); // Update button data to reflect the new visibility
+                        }
+                    } else {
+                        // Show error message
+                        $('#visibility-message').html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    // Handle error case
+                    $('#visibility-message').html('<div class="alert alert-danger">Error updating category visibility.</div>');
+                }
+            });
+        });
+    });
+</script>

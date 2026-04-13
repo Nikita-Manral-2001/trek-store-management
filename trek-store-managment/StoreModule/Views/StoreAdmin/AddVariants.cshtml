@@ -1,0 +1,138 @@
+﻿@model TTH.Areas.Super.Models.TrekkersStore.ProductVariantInputModel
+
+@{
+    ViewBag.Title = "Add Variant";
+    var sizes = ViewBag.Sizes as List<SelectListItem>;
+    var colors = ViewBag.Colors as List<SelectListItem>;
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-bottom border-dark">
+            <h4 class="mb-0">Add Variant for Product ID: @Model.ProductId</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/super/StoreAdmin/AddVariants">
+                <input type="hidden" name="ProductId" value="@Model.ProductId" />
+
+                <div id="variant-container">
+                    <div class="row variant-group g-3 align-items-end mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Select Size</label>
+                            <select name="SelectedSizeIds" class="form-select" required>
+                                <option value="">-- Select Size --</option>
+                                @foreach (var size in sizes)
+                                {
+                                    <option value="@size.Value">@size.Text</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Select Color</label>
+                            <select name="SelectedColorIds" class="form-select" required>
+                                <option value="">-- Select Color --</option>
+                                @foreach (var color in colors)
+                                {
+                                    <option value="@color.Value">@color.Text</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 d-flex gap-2 align-items-end">
+                            <button type="button" class="btn btn-outline-secondary add-more">
+                                <i class="bi bi-plus-circle"></i> Add More
+                            </button>
+                            <button type="button" class="btn btn-outline-danger remove-variant">
+                                <i class="bi bi-dash-circle"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-outline-danger px-4">
+                        <i class="bi bi-check-circle"></i> Submit
+                    </button>
+                </div>
+            </form>
+
+                        @if (Model.ExistingVariants.Any())
+                        {
+                            <h4 class="mt-4">Existing Variants</h4>
+                            <table class="table table-bordered mt-2">
+                                <thead>
+                                    <tr>
+                                        <th>Size</th>
+                                        <th>Color</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var variant in Model.ExistingVariants)
+                                    {
+                                        <tr>
+                                            <td>@variant.SizeName</td>
+                                            <td>@variant.ColorName</td>
+                                            <td>
+                                                <form method="post" action="/super/StoreAdmin/DeleteVariant" style="display:inline;">
+                                                    <input type="hidden" name="ProductId" value="@Model.ProductId" />
+                                                    <input type="hidden" name="SizeId" value="@variant.SizeId" />
+                                                    <input type="hidden" name="ColorId" value="@variant.ColorId" />
+                                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+
+</div>
+</div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        // Add more variant inputs
+        $(document).on("click", ".add-more", function () {
+            var newVariant = $(".variant-group:first").clone();
+            newVariant.find("select").val("");
+            $("#variant-container").append(newVariant);
+        });
+
+        // Remove variant input group
+        $(document).on("click", ".remove-variant", function () {
+            if ($(".variant-group").length > 1) {
+                $(this).closest(".variant-group").remove();
+            }
+        });
+
+        // Check if size already exists
+        $(document).on("change", "select[name='SelectedSizeIds']", function () {
+            var sizeId = $(this).val();
+            var productId = "@Model.ProductId";
+            if (sizeId) {
+                $.get(`/super/StoreAdmin/CheckSizeExists/${sizeId}/${productId}`, function (response) {
+                    if (response.exists) {
+                        alert("This size is already added for this product.");
+                    }
+                });
+            }
+        });
+
+        // Check if color already exists
+        $(document).on("change", "select[name='SelectedColorIds']", function () {
+            var colorId = $(this).val();
+            var productId = "@Model.ProductId";
+            if (colorId) {
+                $.get(`/super/StoreAdmin/CheckColorExists/${colorId}/${productId}`, function (response) {
+                    if (response.exists) {
+                        alert("This color is already added for this product.");
+                    }
+                });
+            }
+        });
+    });
+</script>

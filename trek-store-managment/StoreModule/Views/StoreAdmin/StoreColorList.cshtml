@@ -1,0 +1,125 @@
+﻿@model IEnumerable<TTH.Areas.Super.Models.TrekkersStore.StoreColorModel>
+
+@{
+    ViewData["Title"] = "Color List";
+}
+
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div id="visibility-message"></div>
+        <div class="card border-bottom border-dark rounded-3">
+            <div class="card-header bg-white border-bottom border-dark">
+                <h3 class="m-0 fw-semibold text-dark">Add Color</h3>
+            </div>
+            <div class="card-body">
+              
+                  <form asp-action="AddColor" asp-controller="StoreAdmin" method="post" class="form-inline">
+                        <div class="col-auto">
+                            <label for="colorName" class="sr-only">Color Name</label>
+                        </div>
+                        <div class="col-auto">
+                          
+            <input type="text" class="form-control" id="colorName" name="Name" placeholder="Color Name" required>
+                        </div>
+                        <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-danger">Add Color</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+        <div class="card-header bg-white border-bottom border-dark">
+            <h3 class="m-0 fw-semibold text-dark">Color List</h3>
+        </div>
+            <table class="table table-bordered table-striped table-hover text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                <th>Color_id</th>
+                <th>Color</th>
+                <th>Actions</th>
+            </tr>
+                </thead>
+                   <tbody>
+            @foreach (var color in Model)
+            {
+                <tr>
+                    <td>@color.IdColor </td>
+                    <td>@color.Name</td>
+                    <td>
+
+
+
+
+                                    <form class="d-inline toggle-visibility-form" data-category-id="@color.IdColor">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(color.IsVisible ? "btn-success" : "btn-danger") toggle-visibility-btn" data-visible="@color.IsVisible">
+                                            @(color.IsVisible ? "Disable" : "Enable")
+                                        </button>
+                                    </form>
+
+
+
+                                    
+
+
+
+
+
+                        
+                    </td>
+                </tr>
+            }
+        </tbody>
+            </table>
+        </div>
+    </div>
+
+   </div></div>
+
+<script>
+    $(document).ready(function () {
+        
+        $('.toggle-visibility-form').submit(function (e) {
+            e.preventDefault();
+            var form = $(this);
+            var button = form.find('.toggle-visibility-btn');
+            var categoryId = form.data('category-id');
+            var isCurrentlyVisible = button.data('visible');  
+
+            $.ajax({
+                url: '/Super/StoreAdmin/UpdateVisibilityColor',
+                type: 'POST',
+                data: { id: categoryId },
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        
+                        $('#visibility-message').html('<div class="alert alert-success">' + response.message + '</div>');
+
+                        
+                        if (response.isVisible) {
+                            button.text('Disable').removeClass('btn-danger').addClass('btn-success');
+                            button.data('visible', true); 
+                        } else {
+                            button.text('Enable').removeClass('btn-success').addClass('btn-danger');
+                            button.data('visible', false); 
+                        }
+                    } else {
+                        
+                        $('#visibility-message').html('<div class="alert alert-danger">' + response.message + '</div>');
+                    }
+                },
+                error: function () {
+                    
+                    $('#visibility-message').html('<div class="alert alert-danger">Error updating category visibility.</div>');
+                }
+            });
+        });
+    });
+</script>

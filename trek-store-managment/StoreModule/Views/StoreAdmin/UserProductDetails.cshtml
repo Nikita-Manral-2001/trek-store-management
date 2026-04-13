@@ -1,0 +1,113 @@
+﻿@model TTH.Areas.Super.Models.TrekkersStore.AdminOrderDetailsViewModel
+
+<div class="container mt-4">
+    <h3>Order Details</h3>
+    <hr />
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <form asp-action="UpdateStatus" asp-controller="StoreAdmin" method="post">
+                <input type="hidden" name="bookingId" id="BookingId" value="@Model.BookingId" />
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" class="form-control">
+                        <option value="">Select Status </option>
+                        <option value="Pending Payment">Pending Payment</option>
+                        <option value="Processing">Processing</option>
+                        <option value="OnHold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+               
+            </form>
+
+        </div>
+        <div class="col-md-4">
+            <h5>Billing Address</h5>
+            @if (Model.Address != null)
+            {
+                <p>
+                    <strong>@Model.Address.FirstName @Model.Address.LastName</strong><br />
+                    @Model.Address.StreetAddress<br />
+                    <strong>Compnay Name:</strong> @Model.Address.CompanyName<br />
+                    @Model.Address.City,  @Model.Address.State @Model.Address.PinCode<br />
+                    <strong>Phone:</strong> @Model.Address.PhoneNo<br />
+                    <strong>Email:</strong> @Model.Address.Email<br />
+                    <strong>Note: </strong>@Model.Address.Notes
+                </p>
+            }
+            else
+            {
+                <p>No address available</p>
+            }
+        </div>
+
+        <div class="col-md-4">
+            <h5>Order Info</h5>
+            <p>
+                <strong>Booking Id:</strong> @Model.BookingId <br />
+                <strong>OrderId: </strong> @Model.Orders.Id <br />
+                <strong>Status:</strong> Processing <br />
+                <strong>Date:</strong> @Model.OrderItems.FirstOrDefault().OrderDate.ToString("yyyy-MM-dd HH:mm")
+            </p>
+        </div>
+    </div>
+
+    <h5>Items</h5>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Product</th>
+                
+                <th>Qty</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderItems)
+            {
+                <tr>
+                    <td>
+                        <img src="@Url.Content("~/" + item.ImagePath.TrimStart('/'))"
+                             alt="Product Image" width="80"  height="80"   />
+                        </td>
+                    <td>@item.ProductName <br />
+                        <strong>Size: </strong>@item.SizeName<br />
+                        <strong>Color: </strong>@item.ColorName
+                    </td>
+                    
+                    <td>@item.Quantity</td>
+                    <td>₹@item.PricePerDay</td>
+                    
+                </tr>
+            }
+            <tr>
+                <td colspan="2"> <button type="submit" class="btn btn-outline-danger px-4">Refund</button></td>
+                <td colspan="1" class="text-end"><strong>Total :</strong></td>
+                <td colspan="1" ><strong>₹@Model.OrderItems.Sum(x => x.Quantity * x.PricePerDay)</strong></td>
+
+            </tr>
+        </tbody>
+    </table>
+</div>
+@* update status *@
+<script>
+    $("#status").change(function () {
+        var status = $(this).val();
+        var bookingId = $("#BookingId").val(); // hidden field with bookingId
+
+        $.ajax({
+            url: "/super/StoreAdmin/UpdateStatus",
+            type: "POST",
+            data: { bookingId: bookingId, status: status },
+            success: function (response) {
+                alert(response.message);
+            },
+            error: function () {
+                alert("Error updating status");
+            }
+        });
+    });
+</script>

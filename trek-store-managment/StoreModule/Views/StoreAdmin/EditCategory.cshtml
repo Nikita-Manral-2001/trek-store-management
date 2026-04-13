@@ -1,0 +1,50 @@
+﻿@using TTH.Areas.Super.Models.TrekkersStore
+@model CategoryModel
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card border-bottom border-dark rounded-3">
+            <div class="card-header bg-white border-bottom border-dark">
+                <h3 class="m-0 fw-semibold text-dark">Edit Category</h3>
+            </div>
+            <div class="card-body">
+
+
+                <form asp-action="EditCategory" asp-controller="StoreAdmin" method="post" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="Category_Id" />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="CategoryName"><b>Category Name</b></label>
+                                <input class="form-control" asp-for="CategoryName" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label><b>Existing Cover Image</b></label><br />
+                                @if (!string.IsNullOrEmpty(Model.CoverImgUrl))
+                                {
+                                    <img src="@Model.CoverImgUrl" alt="Cover" width="150" class="img-thumbnail mb-2" />
+                                }
+                            </div>
+
+                        </div>
+
+
+
+
+
+                        <div class="form-group">
+                            <label asp-for="CoverPhoto"><b>Upload New Cover Image (optional)</b></label>
+                            <input type="file" asp-for="CoverPhoto" class="form-control-file" />
+                        </div>
+                    </div>
+
+
+                    <button type="submit" class="btn btn-outline-danger mt-3">Update Product</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
