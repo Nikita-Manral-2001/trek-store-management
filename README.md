@@ -79,3 +79,34 @@ So direct public testing is restricted.
 * Tested using Postman
 * Integrated with live server
 * Validated request/response handling
+
+  ## 📸 Screenshots
+
+### 🛍️ Store Products
+
+![Products](Store_screenshot/Store_Products.png)
+
+### 📦 Product Details
+
+![Details](Store_screenshot/Product_Details.png)
+
+### 🛒 Cart
+
+![Cart](Store_screenshot/Store_Cart.png)
+
+### 📍 Select Address
+
+![Address](Store_screenshot/select_address.png)
+
+### ➕ Add / Edit Address
+
+![Address](Store_screenshot/edit_add_address.png)
+
+### 🧾 Inventory Management
+
+![Inventory](Store_screenshot/Edit_Inventory.png)
+
+### 💳 Payment (Razorpay)
+
+![Payment](Store_screenshot/razorPay.png)
+
